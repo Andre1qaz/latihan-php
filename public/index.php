@@ -1,12 +1,21 @@
 <?php
+// Mulai session untuk menampung pesan sukses/error
+session_start();
+
+// Tentukan page yang akan diakses
 if (isset($_GET['page'])) {
     $page = $_GET['page'];
 } else {
     $page = 'index';
 }
-include ('../controllers/TodoController.php');
 
+// Load controller
+include('../controllers/TodoController.php');
+
+// Inisialisasi controller
 $todoController = new TodoController();
+
+// Routing berdasarkan page
 switch ($page) {
     case 'index':
         $todoController->index();
@@ -20,4 +29,14 @@ switch ($page) {
     case 'delete':
         $todoController->delete();
         break;
+    case 'detail':
+        $todoController->detail();
+        break;
+    case 'updateSort':
+        $todoController->updateSort();
+        break;
+    default:
+        // Jika page tidak ditemukan, redirect ke halaman utama
+        header('Location: index.php');
+        exit;
 }
