@@ -83,13 +83,15 @@ public function checkTitleExists($title, $excludeId = null)
         $params[] = $excludeId;
     }
 
-$result = pg_query($this->conn, $query);
+    // PERBAIKAN: Gunakan pg_query_params untuk query dengan parameter
+    $result = pg_query_params($this->conn, $query, $params);
 
-if (!$result) {
-    die("Query gagal: " . pg_last_error($this->conn) . "<br>Query: " . $query);
-}
+    if (!$result) {
+        // Tambahkan $params ke pesan error untuk debugging yang lebih baik
+        die("Query gagal: " . pg_last_error($this->conn) . "<br>Query: " . $query . "<br>Params: " . print_r($params, true));
+    }
 
-$row = pg_fetch_assoc($result);
+    $row = pg_fetch_assoc($result);
 
     return $row && $row['count'] > 0;
 }
