@@ -83,14 +83,14 @@ public function checkTitleExists($title, $excludeId = null)
         $params[] = $excludeId;
     }
 
-    $result = pg_query_params($this->conn, $query, $params);
+$result = pg_query($this->conn, $query);
 
-    // Debugging jika query gagal
-    if (!$result) {
-        die("Query gagal di checkTitleExists(): " . pg_last_error($this->conn));
-    }
+if (!$result) {
+    die("Query gagal: " . pg_last_error($this->conn) . "<br>Query: " . $query);
+}
 
-    $row = pg_fetch_assoc($result);
+$row = pg_fetch_assoc($result);
+
     return $row && $row['count'] > 0;
 }
 
