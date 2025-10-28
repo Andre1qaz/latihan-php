@@ -72,18 +72,28 @@ class TodoModel
         return $todos;
     }
 
-    public function checkTitleExists($title, $excludeId = null)
-    {
-        $query = 'SELECT COUNT(*) as count FROM todo WHERE title = $1';
-        $params = [$title];
-        if ($excludeId) {
-            $query .= ' AND id != $2';
-            $params[] = $excludeId;
-        }
-        $result = pg_query_params($this->conn, $query, $params);
-        $row = pg_fetch_assoc($result);
-        return $row['count'] > 0;
+public function checkTitleExists($title, $excludeId = null)
+{
+    $query = 'SELECT COUNT(*) as count FROM todo WHERE title = $1';
+    $params = [$title];
+
+    // Tambahkan kondisi jika excludeId tidak null
+    if (!is_null($excludeId)) {
+        $query .= ' AND id != $2';
+        $params[] = $excludeId;
     }
+
+    $result = pg_query_params($this->conn, $query, $params);
+
+    // Debugging jika query gagal
+    if (!$result) {
+        die("Query gagal di checkTitleExists(): " . pg_last_error($this->conn));
+    }
+
+    $row = pg_fetch_assoc($result);
+    return $row && $row['count'] > 0;
+}
+
 
     public function getTodoById($id)
     {
