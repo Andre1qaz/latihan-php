@@ -23,43 +23,65 @@ class TodoController
     }
 
     public function create()
-    {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $title = trim($_POST['title']);
-            $description = trim($_POST['description'] ?? '');
-            $todoModel = new TodoModel();
-            if (empty($title)) {
-                // Handle error: title is required
-                header('Location: index.php?error=Title is required');
-                exit;
-            }
-            if (!$todoModel->createTodo($title, $description)) {
-                header('Location: index.php?error=Title already exists');
-                exit;
-            }
+{
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $title = trim($_POST['title']);
+        $description = trim($_POST['description'] ?? '');
+        $todoModel = new TodoModel();
+        
+        if (empty($title)) {
+            header('Location: index.php?error=Title is required');
+            exit;
         }
-        header('Location: index.php');
+        
+        // PERBAIKAN: Tangani respons status dari Model
+        $result = $todoModel->createTodo($title, $description);
+
+        if ($result === 'exists') {
+            header('Location: index.php?error=Title already exists');
+            exit;
+        } elseif ($result === 'dberror') {
+            // Ini akan menunjukkan jika ada masalah database (bukan duplikat)
+            header('Location: index.php?error=Database error on create');
+            exit;
+        }
+        // Jika 'success', biarkan lanjut ke redirect di bawah
     }
+    header('Location: index.php');
+}
+
+
 
     public function update()
-    {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $id = $_POST['id'];
-            $title = trim($_POST['title']);
-            $description = trim($_POST['description'] ?? '');
-            $isFinished = isset($_POST['is_finished']) ? ($_POST['is_finished'] == '1') : false;
-            $todoModel = new TodoModel();
-            if (empty($title)) {
-                header('Location: index.php?error=Title is required');
-                exit;
-            }
-            if (!$todoModel->updateTodo($id, $title, $description, $isFinished)) {
-                header('Location: index.php?error=Title already exists');
-                exit;
-            }
+{
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $id = $_POST['id'];
+        $title = trim($_POST['title']);
+        $description = trim($_POST['description'] ?? '');
+        $isFinished = isset($_POST['is_finished']) ? ($_POST['is_finished'] == '1') : false;
+        $todoModel = new TodoModel();
+        
+        if (empty($title)) {
+            header('Location: index.php?error=Title is required');
+            exit;
         }
-        header('Location: index.php');
+        
+        // PERBAIKAN: Tangani respons status dari Model
+        $result = $todoModel->updateTodo($id, $title, $description, $isFinished);
+
+        if ($result === 'exists') {
+            header('Location: index.php?error=Title already exists');
+            exit;
+        } elseif ($result === 'dberror') {
+            // Ini akan menunjukkan jika ada masalah database (bukan duplikat)
+            header('Location: index.php?error=Database error on update');
+            exit;
+        }
+         // Jika 'success', biarkan lanjut ke redirect di bawah
     }
+    header('Location: index.php');
+}
+
 
     public function detail()
     {

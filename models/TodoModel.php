@@ -74,7 +74,8 @@ class TodoModel
 
 public function checkTitleExists($title, $excludeId = null)
 {
-    $query = 'SELECT COUNT(*) as count FROM todo WHERE title = $1';
+    // PERBAIKAN: Gunakan ILIKE agar case-insensitive, konsisten dengan search
+    $query = 'SELECT COUNT(*) as count FROM todo WHERE title ILIKE $1';
     $params = [$title];
 
     // Tambahkan kondisi jika excludeId tidak null
@@ -83,11 +84,9 @@ public function checkTitleExists($title, $excludeId = null)
         $params[] = $excludeId;
     }
 
-    // PERBAIKAN: Gunakan pg_query_params untuk query dengan parameter
     $result = pg_query_params($this->conn, $query, $params);
 
     if (!$result) {
-        // Tambahkan $params ke pesan error untuk debugging yang lebih baik
         die("Query gagal: " . pg_last_error($this->conn) . "<br>Query: " . $query . "<br>Params: " . print_r($params, true));
     }
 
@@ -95,6 +94,7 @@ public function checkTitleExists($title, $excludeId = null)
 
     return $row && $row['count'] > 0;
 }
+
 
 
     public function getTodoById($id)
@@ -110,24 +110,30 @@ public function checkTitleExists($title, $excludeId = null)
     }
 
     public function createTodo($title, $description = '')
-    {
-        if ($this->checkTitleExists($title)) {
-            return false; // Title already exists
-        }
-        $query = 'INSERT INTO todo (title, description, is_finished, created_at, updated_at) VALUES ($1, $2, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)';
-        $result = pg_query_params($this->conn, $query, [$title, $description]);
-        return $result !== false;
+{
+    if ($this->checkTitleExists($title)) {
+        return 'exists'; // PERBAIKAN: Kembalikan status spesifik
     }
+    $query = 'INSERT INTO todo (title, description, is_finished, created_at, updated_at) VALUES ($1, $2, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)';
+    $result = pg_query_params($this->conn, $query, [$title, $description]);
+    
+    // PERBAIKAN: Kembalikan status sukses atau error database
+    return $result !== false ? 'success' : 'dberror';
+}
+
 
     public function updateTodo($id, $title, $description, $isFinished)
-    {
-        if ($this->checkTitleExists($title, $id)) {
-            return false; // Title already exists for another todo
-        }
-        $query = 'UPDATE todo SET title=$1, description=$2, is_finished=$3, updated_at=CURRENT_TIMESTAMP WHERE id=$4';
-        $result = pg_query_params($this->conn, $query, [$title, $description, $isFinished, $id]);
-        return $result !== false;
+{
+    if ($this->checkTitleExists($title, $id)) {
+        return 'exists'; // PERBAIKAN: Kembalikan status spesifik
     }
+    $query = 'UPDATE todo SET title=$1, description=$2, is_finished=$3, updated_at=CURRENT_TIMESTAMP WHERE id=$4';
+    $result = pg_query_params($this->conn, $query, [$title, $description, $isFinished, $id]);
+    
+    // PERBAIKAN: Kembalikan status sukses atau error database
+    return $result !== false ? 'success' : 'dberror';
+}
+
 
     public function deleteTodo($id)
     {
